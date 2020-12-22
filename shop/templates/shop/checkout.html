@@ -1,0 +1,131 @@
+{% extends 'shop/basic.html' %}
+
+{% block title %}  Ecom | Checkout Product {% endblock %}
+
+{% block nav_item %}
+
+<li class="nav-item">
+  <a class="nav-link" href="/shop">Home</a>
+</li>
+<li class="nav-item">
+  <a class="nav-link" href="/shop/about">About Us</a>
+</li>
+<li class="nav-item">
+  <a class="nav-link" href="/shop/tracker">Track Your Order</a>
+</li>
+<li class="nav-item">
+  <a class="nav-link" href="/blog">Blog</a>
+</li>
+<li class="nav-item">
+  <a class="nav-link" href="/shop/contact">Contact Us</a>
+</li>    
+
+{% endblock %}   
+
+{% block content %}
+
+{% if action == 'sent' %}
+  <div class="alert alert-warning alert-dismissible fade show" role="alert">
+  <strong>Thank You For Ordering With Us ! </strong>Use <span class="badge badge-primary badge-pill">{{id}}</span> As Your Tracking ID
+  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+{% endif %}
+
+    <div class="container py-4">
+        <h4 class="text-center">Step 1 --> Review Your Cart</h4>
+        <ul class="list-group py-2" id="items">
+          </ul>
+
+          <h4 class="text-center py-4">Step 2 --> Enter Your Personal Details</h4>
+          <form action="/shop/checkout/" method="POST">
+            {% csrf_token %}
+            <input type="hidden" id="items_json" name="items_json">
+            <div class="form-row">
+              <div class="form-group col-md-6">
+                <label for="inputName">Name</label>
+                <input type="text" class="form-control" id="inputName"  name = "name" placeholder="Enter Your Name" required>
+              </div>
+              <div class="form-group col-md-6">
+                <label for="inputEmail">Email</label>
+                <input type="email" class="form-control" placeholder="Enter Your Email" name = "email" id="inputEmail" required>
+              </div>
+            </div>
+            <div class="form-group">
+                <label for="inputContact">Contact Number</label>
+                <input type="number" class="form-control" id="inputContact" name = "contact_no" placeholder="Enter Your Contact Number" required>
+              </div>
+            <div class="form-group">
+              <label for="inputAddress">Address Line 1</label>
+              <input type="text" class="form-control" id="inputAddress" name = "address1" placeholder="1234 Main St" required>
+            </div>
+            <div class="form-group">
+              <label for="inputAddress2">Address Line 2</label>
+              <input type="text" class="form-control" id="inputAddress2" name = "address2" placeholder="Apartment, studio, or floor" required>
+            </div>
+            <div class="form-row">
+              <div class="form-group col-md-6">
+                <label for="inputCity">City</label>
+                <input type="text" class="form-control" id="inputCity" name = "city" placeholder="Enter Your City" required>
+              </div>
+              <div class="form-group col-md-4">
+                <label for="inputState">State</label>
+                <input type="text" class="form-control" id="inputState" name = "state" placeholder="Enter Your State" required>
+              </div>
+              <div class="form-group col-md-2">
+                <label for="inputZip">Zip Code</label>
+                <input type="text" class="form-control" id="inputZip" name = "zip_code" placeholder="Enter Your Zip Code" required>
+              </div>
+            </div>
+            <div class="col"></div>
+            <button type="submit" class="btn btn-primary">Checkout</button>
+            <button type="reset" class="btn btn-danger">Reset</button>
+            </div>
+          </form>
+    </div>
+
+        {% if action == 'sent'%}
+           <script> localStorage.clear();</script>
+        {% endif %}
+
+{% endblock %}
+
+{% block script %} 
+<script>
+if (localStorage.getItem('cart') == null) {
+  var cart = {};
+} else {
+  cart = JSON.parse(localStorage.getItem('cart'));
+}
+console.log(cart);
+var sum = 0;
+var total_bill = 0
+if ($.isEmptyObject(cart)) {
+  //if object is empty
+  mystr = `<div class="alert alert-danger" role="alert">Your cart is empty, please add some items to your cart before checking out!</div>`
+  $('#items').append(mystr);
+} else {
+    for (item in cart) {
+        let name = cart[item][1];
+        let qty = parseInt(cart[item][0]);
+        let price=cart[item][2];
+        total_bill+=price*qty;
+        sum = sum + qty;
+        mystr = `<li class="list-group-item d-flex justify-content-between align-items-center list-group-item-action">
+                    ${name}
+                    <span class="badge badge-primary badge-pill">${qty}</span>
+                </li>`
+        $('#items').append(mystr);
+    }
+    total=`<div class="alert alert-success" role="alert"><li class="list-group-item d-flex justify-content-between align-items-center">
+    <h3> Total Bill:</h3>
+    <h3>Rs.${total_bill}/-</h3>
+    </li></div>`;
+      $('#items').append(total);
+}
+document.getElementById('cart').innerHTML = sum;
+$('#items_json').val(JSON.stringify(cart));
+</script>
+
+{% endblock %}

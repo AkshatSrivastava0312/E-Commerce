@@ -1,0 +1,116 @@
+{% extends 'shop/basic.html' %}
+
+{% block title %} Ecom | Order Tracker {% endblock %}
+
+{% block nav_item %}
+
+<li class="nav-item">
+  <a class="nav-link" href="/shop">Home</a>
+</li>
+<li class="nav-item">
+  <a class="nav-link" href="/shop/about">About Us</a>
+</li>
+<li class="nav-item">
+  <a class="nav-link active" href="/shop/tracker">Track Your Order</a>
+</li>
+<li class="nav-item">
+  <a class="nav-link" href="/blog">Blog</a>
+</li>
+<li class="nav-item">
+  <a class="nav-link" href="/shop/contact">Contact Us</a>
+</li>
+
+{% endblock %}
+
+{% block content %}
+
+<div class="container py-4">
+  <h4 class="text-center">Track Your Order</h4>
+  <form action="/shop/tracker/" method="POST" id="trackerForm">
+    {% csrf_token %}
+    <div class="form-row">
+      <div class="form-group col-md-6">
+        <label for="inputId">Order ID</label>
+        <input type="number" class="form-control" id="inputId" name="orderId" placeholder="Enter Your Order ID"
+          required>
+      </div>
+      <div class="form-group col-md-6">
+        <label for="inputEmail">Email</label>
+        <input type="email" class="form-control" placeholder="Enter Your Email" name="email" id="inputEmail" required>
+      </div>
+    </div>
+    <center>
+      <button type="submit" class="btn btn-primary">Track Your Order</button>
+      <button type="reset" class="btn btn-danger">Reset</button>
+    </center>
+  </form>
+  <h4 class="text-center mt-5" id="headingTrack"> </h4>
+  <ul class="list-group" id="track">
+  </ul>
+
+  <h4 class="text-center mt-5" id="headingOrder"> </h4>
+  <ul class="list-group" id="trackOrder">
+    </ul>
+
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+  $('#trackerForm').submit(function (event) {
+    $('#headingTrack').empty();
+    $('#track').empty();
+    var formData = {
+      'orderId': $('input[name=orderId]').val(),
+      'email': $('input[name=email]').val(),
+      'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()
+    };
+    $.ajax({
+      type: 'POST',
+      url: '/shop/tracker/',
+      data: formData,
+      encode: true
+    }).done(function (data) {
+        console.log(data);
+        if (data != {}) {
+        data = JSON.parse(data);
+        updates = data[0];        
+          value = `Your Order Status`;
+          $('#headingTrack').append(value);
+          for (i = 0; i < updates.length; i++) {
+            let text = updates[i]['text'];
+            let time = updates[i]['time'];
+            mystr = `<li class="list-group-item d-flex justify-content-between align-items-center list-group-item-action">
+                      ${text}
+                      <span class="badge badge-danger badge-pill">${time}</span>
+                  </li>`
+            $('#track').append(mystr);
+          }
+        } else {
+          mystr = `<div class="alert alert-danger" role="alert">
+  <b>Incorrect Order Credentials!</b> Please try again
+</div>`
+          $('#headingTrack').append(mystr);
+        }
+
+        cart =  JSON.parse(data[1]);
+
+        head = `Your Order Details`;
+        $('#headingOrder').append(head);
+
+        for (item in cart) {
+            let name = cart[item][1];
+            let qty = cart[item][0];           
+            mystr = `<li class="list-group-item d-flex justify-content-between align-items-center list-group-item-action">
+                        ${name}
+                        <span class="badge badge-primary badge-pill">${qty}</span>
+                    </li>`
+            $('#trackOrder').append(mystr);
+        }
+
+      });
+    event.preventDefault();
+  });
+</script>
+{% endblock %}
